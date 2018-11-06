@@ -1,0 +1,8 @@
+*.js
+*.swp
+.DS_Store
+.idea
+lint-results.xml
+node_modules
+npm-debug.log
+build

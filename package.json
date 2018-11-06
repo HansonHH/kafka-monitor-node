@@ -1,0 +1,37 @@
+{
+  "name": "kafka-monitor-node",
+  "version": "1.0.0",
+  "description": "End-to-end monitor tool for Kafka",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HansonHH/kafka-monitor-node.git"
+  },
+  "keywords": [
+    "Kafka",
+    "end-to-end",
+    "e2e",
+    "monifor",
+    "performance",
+    "latency"
+  ],
+  "author": "HansonHH",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/HansonHH/kafka-monitor-node/issues"
+  },
+  "homepage": "https://github.com/HansonHH/kafka-monitor-node#readme",
+  "dependencies": {
+    "kafka-node": "^3.0.1",
+    "@types/node": "^8.10.34"
+  },
+  "devDependencies": {
+    "prettier": "^1.14.3",
+    "tslint": "^5.11.0",
+    "rxjs-tslint-rules": "^4.10.0",
+    "typescript": "^3.0.0"
+  }
+}
