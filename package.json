@@ -25,8 +25,9 @@
   },
   "homepage": "https://github.com/HansonHH/kafka-monitor-node#readme",
   "dependencies": {
+    "@types/node": "^8.10.34",
     "kafka-node": "^3.0.1",
-    "@types/node": "^8.10.34"
+    "rxjs": "^6.3.3"
   },
   "devDependencies": {
     "prettier": "^1.14.3",
