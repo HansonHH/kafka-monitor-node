@@ -4,7 +4,6 @@ import { map, takeUntil } from 'rxjs/operators'
 import { logger } from '../utils/logger'
 
 export class ProducerService {
-
     private client: KafkaClient
     private producer: Producer
     private isClientReady$ = new Subject<void>()
@@ -15,7 +14,10 @@ export class ProducerService {
     constructor(private clientOptions: KafkaClientOptions, private producerOptions: ProducerOptions) {
         this.clientOptions = clientOptions
         this.client = new KafkaClient(this.clientOptions)
-        this.producer = new Producer(this.client, {...this.producerOptions, partitionerType: 2})
+        this.producer = new Producer(this.client, {
+            ...this.producerOptions,
+            partitionerType: 2,
+        })
         this.monitoringTopic = '_monitoring'
         this.init()
     }
@@ -24,7 +26,7 @@ export class ProducerService {
         logger.info('ProducerServer is starting')
         await Promise.all([this.isClientReady$.toPromise(), this.isProducerReady$.toPromise()])
 
-        const topicMetadata = await this.loadMetadataForTopics() as any
+        const topicMetadata = (await this.loadMetadataForTopics()) as any
         const brokers = topicMetadata[0]
         const clusterScale = Object.keys(brokers).length
 
@@ -35,12 +37,11 @@ export class ProducerService {
             })
 
             this.startInterval()
-
-        } catch(e) {
+        } catch (e) {
             logger.error('Failed to start producer service')
         }
     }
-    
+
     stop() {
         this.runOnTerm$.complete()
         this.producer.close()
@@ -57,7 +58,7 @@ export class ProducerService {
         this.client.on('brokersChanged', () => logger.info('Kafka client brokersChanged'))
         this.client.on('error', (error) => logger.error('Kafka client got error: ', error))
         this.producer.on('error', (error) => logger.error('Producer got error: ', error))
-        this.producer.on('ready', () =>  {
+        this.producer.on('ready', () => {
             logger.info('Producer is ready')
             this.isProducerReady$.complete()
         })
@@ -78,22 +79,27 @@ export class ProducerService {
     private async createMonitoringTopic(partitions: number, replicationFactor: number) {
         logger.info('Creating monitoring topic')
         return new Promise((resolve, reject) => {
-            (this.client as any).createTopics([{
-                topic: this.monitoringTopic,
-                partitions,
-                replicationFactor
-            }] as any, (error: any, result: any) => {
-                if (error) {
-                    reject(error)
+            ;(this.client as any).createTopics(
+                [
+                    {
+                        topic: this.monitoringTopic,
+                        partitions,
+                        replicationFactor,
+                    },
+                ] as any,
+                (error: any, result: any) => {
+                    if (error) {
+                        reject(error)
+                    }
+                    resolve(result)
                 }
-                resolve(result)
-            })
+            )
         })
     }
 
     private loadMetadataForTopics() {
         return new Promise((resolve, reject) => {
-            (this.client as any).loadMetadataForTopics([], (error: any, result: any) => {
+            ;(this.client as any).loadMetadataForTopics([], (error: any, result: any) => {
                 if (error) {
                     reject(error)
                 }
@@ -104,26 +110,33 @@ export class ProducerService {
 
     private startInterval() {
         logger.info('staring interval')
-        return interval(1000).pipe(
-            map(() => {
-                logger.info('New tick')
-                this.sendToKafka().catch((error) => logger.error('Failed to send to Kafka: ', error))
-            }),
-            takeUntil(this.runOnTerm$)
-        ).toPromise()
+        return interval(1000)
+            .pipe(
+                map(() => {
+                    logger.info('New tick')
+                    this.sendToKafka().catch((error) => logger.error('Failed to send to Kafka: ', error))
+                }),
+                takeUntil(this.runOnTerm$)
+            )
+            .toPromise()
     }
 
     private sendToKafka() {
         return new Promise((resolve, reject) => {
-            this.producer.send([{
-                topic: this.monitoringTopic,
-                messages: JSON.stringify({ timestamp: Date.now()})
-            }], (error, result) => {
-                if (error) {
-                    reject(error)
+            this.producer.send(
+                [
+                    {
+                        topic: this.monitoringTopic,
+                        messages: JSON.stringify({ timestamp: Date.now() }),
+                    },
+                ],
+                (error, result) => {
+                    if (error) {
+                        reject(error)
+                    }
+                    resolve(result)
                 }
-                resolve(result)
-            })
+            )
         })
     }
 }

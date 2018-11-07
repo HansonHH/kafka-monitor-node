@@ -1,18 +1,18 @@
 {
-  "compilerOptions": {
-    "module": "commonjs",
-    "target": "ES2016",
-    "lib": ["es2016"],
-    "types": ["node"],
-    "strict": true,
-    "noImplicitReturns": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "strictNullChecks": true,
-    "skipLibCheck": true,
-    "inlineSourceMap": true,
-    "removeComments": true,
-    "outDir": "build"
-  },
-  "include": ["index.ts", "lib", "test"]
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "ES2016",
+        "lib": ["es2016"],
+        "types": ["node"],
+        "strict": true,
+        "noImplicitReturns": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "strictNullChecks": true,
+        "skipLibCheck": true,
+        "inlineSourceMap": true,
+        "removeComments": true,
+        "outDir": "build"
+    },
+    "include": ["index.ts", "lib", "test"]
 }
