@@ -8,7 +8,7 @@ export class ProducerService {
     private producer: Producer
     private isClientReady$ = new Subject<void>()
     private isProducerReady$ = new Subject<void>()
-    private runOnTerm$ = new Subject<void>()
+    private destroy$ = new Subject<void>()
     private monitoringTopic: string
 
     constructor(private clientOptions: KafkaClientOptions, private producerOptions: ProducerOptions) {
@@ -43,11 +43,12 @@ export class ProducerService {
     }
 
     stop() {
-        this.runOnTerm$.complete()
+        this.destroy$.next()
         this.producer.close()
         this.client.close()
         this.isProducerReady$.complete()
         this.isClientReady$.complete()
+        this.destroy$.complete()
     }
 
     private init() {
@@ -116,7 +117,7 @@ export class ProducerService {
                     logger.info('New tick')
                     this.sendToKafka().catch((error) => logger.error('Failed to send to Kafka: ', error))
                 }),
-                takeUntil(this.runOnTerm$)
+                takeUntil(this.destroy$)
             )
             .toPromise()
     }
