@@ -26,13 +26,11 @@ export class ProducerService {
         logger.info('ProducerServer is starting')
         await Promise.all([this.isClientReady$.toPromise(), this.isProducerReady$.toPromise()])
 
-        const topicMetadata = (await this.loadMetadataForTopics()) as any
-        const brokers = topicMetadata[0]
-        const clusterScale = Object.keys(brokers).length
-
         try {
             await this.ifMonitoringTopicExists().catch(async () => {
                 logger.info('Monitoring topic does not exist')
+
+                const clusterScale = await this.getClusterScale()
                 await this.createMonitoringTopic(clusterScale, clusterScale)
             })
 
@@ -63,6 +61,12 @@ export class ProducerService {
             logger.info('Producer is ready')
             this.isProducerReady$.complete()
         })
+    }
+
+    private getClusterScale() {
+        const topicMetadata = (await this.loadMetadataForTopics()) as any
+        const brokers = topicMetadata[0]
+        return Object.keys(brokers).length
     }
 
     private async ifMonitoringTopicExists() {
