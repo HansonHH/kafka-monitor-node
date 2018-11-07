@@ -31,10 +31,14 @@ export class ProducerService {
 
                 const clusterScale = await this.getClusterScale()
                 logger.info('Kafka cluster scale: ', clusterScale)
+
                 await this.createMonitoringTopic(clusterScale, clusterScale)
+                logger.info('Created monitoring topic:', this.monitoringTopic)
             })
 
+            logger.info('Monitoring topic exists:', this.monitoringTopic)
             this.startInterval()
+
         } catch (e) {
             logger.error('Failed to start producer service: ', e)
         }
