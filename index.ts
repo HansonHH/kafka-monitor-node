@@ -3,9 +3,9 @@ import { ProducerService } from './lib/producer-service'
 async function main() {
     const producerService = new ProducerService(
         {
-            kafkaHost: '192.168.0.103:32774',
-        },
-        {}
+            bootstrapServers: '192.168.0.102:32777',
+            topic: 'test'
+        }
     )
     await producerService.start()
 }

@@ -1,7 +1,8 @@
-import { Producer, KafkaClient, KafkaClientOptions, ProducerOptions } from 'kafka-node'
+import { Producer, KafkaClient } from 'kafka-node'
 import { Subject, interval } from 'rxjs'
 import { map, takeUntil } from 'rxjs/operators'
 import { logger } from '../utils/logger'
+import { ProducerServiceOptions } from './types'
 
 export class ProducerService {
     private client: KafkaClient
@@ -10,15 +11,13 @@ export class ProducerService {
     private isProducerReady$ = new Subject<void>()
     private destroy$ = new Subject<void>()
     private monitoringTopic: string
+    private intervalMs: number
 
-    constructor(private clientOptions: KafkaClientOptions, private producerOptions: ProducerOptions) {
-        this.clientOptions = clientOptions
-        this.client = new KafkaClient(this.clientOptions)
-        this.producer = new Producer(this.client, {
-            ...this.producerOptions,
-            partitionerType: 2,
-        })
-        this.monitoringTopic = '_monitoring'
+    constructor(private options: ProducerServiceOptions) {
+        this.client = new KafkaClient(this.kafkaClientOptions())
+        this.producer = new Producer(this.client, this.kafkaProducerOptions())
+        this.monitoringTopic = this.options.topic || '_monitoring'
+        this.intervalMs = this.options.intervalMs || 100
         this.init()
     }
 
@@ -31,12 +30,13 @@ export class ProducerService {
                 logger.info('Monitoring topic does not exist')
 
                 const clusterScale = await this.getClusterScale()
+                logger.info('Kafka cluster scale: ', clusterScale)
                 await this.createMonitoringTopic(clusterScale, clusterScale)
             })
 
             this.startInterval()
         } catch (e) {
-            logger.error('Failed to start producer service')
+            logger.error('Failed to start producer service: ', e)
         }
     }
 
@@ -47,6 +47,23 @@ export class ProducerService {
         this.isProducerReady$.complete()
         this.isClientReady$.complete()
         this.destroy$.complete()
+    }
+
+    private kafkaClientOptions() {
+        return {
+            kafkaHost: this.options.bootstrapServers,
+            sslOptions: this.options.sslOptions,
+            clientId: this.options.id,
+            requestTimeout: 10 * 1000
+        }
+    }
+
+    private kafkaProducerOptions() {
+        return {
+            requireAcks: 1,
+            ackTimeoutMs: 5000,
+            partitionerType: 2
+        }
     }
 
     private init() {
@@ -63,7 +80,7 @@ export class ProducerService {
         })
     }
 
-    private getClusterScale() {
+    private async getClusterScale() {
         const topicMetadata = (await this.loadMetadataForTopics()) as any
         const brokers = topicMetadata[0]
         return Object.keys(brokers).length
@@ -84,7 +101,7 @@ export class ProducerService {
     private async createMonitoringTopic(partitions: number, replicationFactor: number) {
         logger.info('Creating monitoring topic')
         return new Promise((resolve, reject) => {
-            ;(this.client as any).createTopics(
+            ; (this.client as any).createTopics(
                 [
                     {
                         topic: this.monitoringTopic,
@@ -104,7 +121,7 @@ export class ProducerService {
 
     private loadMetadataForTopics() {
         return new Promise((resolve, reject) => {
-            ;(this.client as any).loadMetadataForTopics([], (error: any, result: any) => {
+            ; (this.client as any).loadMetadataForTopics([], (error: any, result: any) => {
                 if (error) {
                     reject(error)
                 }
@@ -115,7 +132,7 @@ export class ProducerService {
 
     private startInterval() {
         logger.info('staring interval')
-        return interval(1000)
+        return interval(this.intervalMs)
             .pipe(
                 map(() => {
                     logger.info('New tick')
