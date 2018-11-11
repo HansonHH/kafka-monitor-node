@@ -12,7 +12,7 @@ export class ConsumerService {
     constructor(private options: ConsumerServiceOptions) {
         this.monitoringTopic = this.options.topic || '_monitoring'
         this.consumerGroup = new ConsumerGroup(this.kafkaConsumerGroupOptions(), this.monitoringTopic)
-        this.addListener()
+        this.listenEvents()
     }
 
     stop() {
@@ -39,7 +39,7 @@ export class ConsumerService {
         } as ExtendedConsumerGroupOptions
     }
 
-    private addListener() {
+    private listenEvents() {
         this.consumerGroup.on('error', (error) => logger.error('Consumer group got error: ', error))
         this.consumerGroup.on('rebalancing', () => logger.error('Consumer group is rebalancing'))
         this.consumerGroup.on('rebalanced', () => {
