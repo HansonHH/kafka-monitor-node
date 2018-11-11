@@ -1,3 +1,4 @@
+import { ConsumerGroupOptions } from 'kafka-node'
 
 export interface BaseServiceOptions {
     bootstrapServers: string
@@ -14,4 +15,11 @@ export interface BaseServiceOptions {
 
 export interface ProducerServiceOptions extends BaseServiceOptions {
     intervalMs?: number
+}
+
+export interface ConsumerServiceOptions extends BaseServiceOptions {
+}
+
+export interface ExtendedConsumerGroupOptions extends ConsumerGroupOptions {
+    commitOffsetsOnFirstJoin?: boolean
 }

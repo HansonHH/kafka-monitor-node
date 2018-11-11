@@ -18,7 +18,7 @@ export class ProducerService {
         this.producer = new Producer(this.client, this.kafkaProducerOptions())
         this.monitoringTopic = this.options.topic || '_monitoring'
         this.intervalMs = this.options.intervalMs || 100
-        this.init()
+        this.addListener()
     }
 
     async start() {
@@ -70,7 +70,7 @@ export class ProducerService {
         }
     }
 
-    private init() {
+    private addListener() {
         this.client.on('ready', () => {
             logger.info('Kafka client is ready')
             this.isClientReady$.complete()
