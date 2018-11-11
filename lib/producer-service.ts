@@ -22,7 +22,7 @@ export class ProducerService {
     }
 
     async start() {
-        logger.info('ProducerServer is starting')
+        logger.info('ProducerService is starting')
         await Promise.all([this.isClientReady$.toPromise(), this.isProducerReady$.toPromise()])
 
         try {
