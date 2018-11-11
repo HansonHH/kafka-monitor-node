@@ -135,7 +135,7 @@ export class ProducerService {
     }
 
     private startInterval() {
-        logger.info('staring interval')
+        logger.info('Starting ProducerService interval')
         return interval(this.intervalMs)
             .pipe(
                 map(() => {
