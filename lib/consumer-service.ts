@@ -7,7 +7,6 @@ export class ConsumerService {
 
     private consumerGroup: ConsumerGroup
     private isConsumerGroupReady$ = new Subject<void>()
-    private destroy$ = new Subject<void>()
     private monitoringTopic: string
 
     constructor(private options: ConsumerServiceOptions) {
@@ -17,10 +16,8 @@ export class ConsumerService {
     }
 
     stop() {
-        this.destroy$.next()
         this.consumerGroup.close(() => logger.info('Kafka consumer group is closed'))
         this.isConsumerGroupReady$.complete()
-        this.destroy$.complete()
     }
 
     isReady() {
