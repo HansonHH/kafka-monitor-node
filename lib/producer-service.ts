@@ -139,7 +139,7 @@ export class ProducerService {
         return interval(this.intervalMs)
             .pipe(
                 map(() => {
-                    logger.info('New tick')
+                    logger.info(`New tick (every ${this.intervalMs} ms)`)
                     this.sendToKafka().catch((error) => logger.error('Failed to send to Kafka: ', error))
                 }),
                 takeUntil(this.destroy$)

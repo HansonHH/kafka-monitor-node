@@ -3,16 +3,17 @@ import { ProducerService } from './lib/producer-service'
 
 async function main() {
     const basicConfig = {
-        bootstrapServers: '192.168.0.102:32783,192.168.0.102:32784,192.168.0.102:32785',
+        bootstrapServers: '192.168.0.103:32797',
         topic: 'test'
     }
-    const consumerService = new ConsumerService(basicConfig)
     const producerService = new ProducerService({
         ...basicConfig,
-        intervalMs: 3000
+        intervalMs: 1000
     })
-    await consumerService.isReady()
     await producerService.start()
+
+    const consumerService = new ConsumerService(basicConfig)
+    await consumerService.isReady()
 }
 
 main()

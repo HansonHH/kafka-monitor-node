@@ -8,6 +8,8 @@ export class ConsumerService {
     private consumerGroup: ConsumerGroup
     private isConsumerGroupReady$ = new Subject<void>()
     private monitoringTopic: string
+    private metrics = new Map<number, number>()
+    private startTime = Date.now()
 
     constructor(private options: ConsumerServiceOptions) {
         this.monitoringTopic = this.options.topic || '_monitoring'
@@ -44,13 +46,29 @@ export class ConsumerService {
         this.consumerGroup.on('rebalancing', () => logger.error('Consumer group is rebalancing'))
         this.consumerGroup.on('rebalanced', () => {
             logger.info('Consumer group is ready')
+            this.startTime = Date.now()
             this.isConsumerGroupReady$.complete()
         })
         this.consumerGroup.on('message', (message) => this.messageProcessing(message))
     }
 
     private messageProcessing(message: Message) {
-        logger.info('Got message: ', message)
+        const messageValue = JSON.parse(message.value.toString())
+
+        if (messageValue.timestamp < this.startTime) {
+            return
+        }
+        const latency = Date.now() - messageValue.timestamp
+        if (message.partition !== undefined && latency >= 0) {
+            this.metrics.set(message.partition, latency)
+            this.printOut()
+        }
+    }
+
+    printOut() {
+        this.metrics.forEach((value, key) => {
+            logger.info(`Partition: ${key}, latency: ${value} ms`)
+        })
     }
 
 }
