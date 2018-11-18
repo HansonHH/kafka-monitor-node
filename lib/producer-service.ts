@@ -1,5 +1,5 @@
 import { Producer, KafkaClient } from 'kafka-node'
-import { Subject, interval } from 'rxjs'
+import { Subject, interval, bindCallback, bindNodeCallback, empty } from 'rxjs'
 import { map, takeUntil } from 'rxjs/operators'
 import { logger } from '../utils/logger'
 import { ProducerServiceOptions } from './types'
@@ -91,47 +91,37 @@ export class ProducerService {
     }
 
     private async ifMonitoringTopicExists() {
-        logger.info('Checking if monitoring topic exists')
-        return new Promise((resolve, reject) => {
-            this.client.topicExists([this.monitoringTopic], (error) => {
-                if (error) {
-                    reject(error)
-                }
-                resolve()
-            })
-        })
+        logger.info(`Checking if monitoring topic ${this.monitoringTopic} exists`)
+        await bindCallback(this.client.topicExists).call(this.client, ([this.monitoringTopic]))
+            .pipe(
+                map(
+                    (error) => error ? Promise.reject(error) : empty(),
+                )).toPromise()
     }
 
     private async createMonitoringTopic(partitions: number, replicationFactor: number) {
         logger.info('Creating monitoring topic')
-        return new Promise((resolve, reject) => {
-            ; (this.client as any).createTopics(
-                [
-                    {
-                        topic: this.monitoringTopic,
-                        partitions,
-                        replicationFactor,
-                    },
-                ] as any,
-                (error: any, result: any) => {
-                    if (error) {
-                        reject(error)
-                    }
-                    resolve(result)
-                }
-            )
-        })
+        return bindNodeCallback((this.client as any).createTopics).call(this.client, [
+            {
+                topic: this.monitoringTopic,
+                partitions,
+                replicationFactor,
+            },
+        ] as any).toPromise()
     }
 
     private loadMetadataForTopics() {
-        return new Promise((resolve, reject) => {
-            ; (this.client as any).loadMetadataForTopics([], (error: any, result: any) => {
-                if (error) {
-                    reject(error)
-                }
-                resolve(result)
-            })
-        })
+        logger.info('loading metadata for topics')
+        return bindNodeCallback((this.client as any).loadMetadataForTopics).call(this.client, []).toPromise()
+    }
+
+    private sendToKafka() {
+        return bindNodeCallback(this.producer.send).call(this.producer, [
+            {
+                topic: this.monitoringTopic,
+                messages: JSON.stringify({ timestamp: Date.now() }),
+            },
+        ]).toPromise()
     }
 
     private startInterval() {
@@ -140,29 +130,10 @@ export class ProducerService {
             .pipe(
                 map(() => {
                     logger.info(`New tick (every ${this.intervalMs} ms)`)
-                    this.sendToKafka().catch((error) => logger.error('Failed to send to Kafka: ', error))
+                    this.sendToKafka().catch((error: any) => logger.error('Failed to send to Kafka: ', error))
                 }),
                 takeUntil(this.destroy$)
             )
             .toPromise()
-    }
-
-    private sendToKafka() {
-        return new Promise((resolve, reject) => {
-            this.producer.send(
-                [
-                    {
-                        topic: this.monitoringTopic,
-                        messages: JSON.stringify({ timestamp: Date.now() }),
-                    },
-                ],
-                (error, result) => {
-                    if (error) {
-                        reject(error)
-                    }
-                    resolve(result)
-                }
-            )
-        })
     }
 }
