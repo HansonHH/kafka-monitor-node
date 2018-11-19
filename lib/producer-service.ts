@@ -37,6 +37,10 @@ export class ProducerService {
             })
 
             logger.info('Monitoring topic exists:', this.monitoringTopic)
+
+            const monitoringTopicMetadata = await this.loadMetadataForTopics([this.monitoringTopic])
+            logger.info('Monitoring topic metadata', JSON.stringify(monitoringTopicMetadata, null, 2))
+
             this.startInterval()
 
         } catch (e) {
@@ -85,7 +89,7 @@ export class ProducerService {
     }
 
     private async getClusterScale() {
-        const topicMetadata = (await this.loadMetadataForTopics()) as any
+        const topicMetadata = await this.loadMetadataForTopics([])
         const brokers = topicMetadata[0]
         return Object.keys(brokers).length
     }
@@ -110,9 +114,9 @@ export class ProducerService {
         ] as any).toPromise()
     }
 
-    private loadMetadataForTopics() {
+    private loadMetadataForTopics(topics?: string[]) {
         logger.info('loading metadata for topics')
-        return bindNodeCallback((this.client as any).loadMetadataForTopics).call(this.client, []).toPromise()
+        return bindNodeCallback((this.client as any).loadMetadataForTopics).call(this.client, topics).toPromise()
     }
 
     private sendToKafka() {
