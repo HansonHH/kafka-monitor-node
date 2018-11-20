@@ -100,6 +100,7 @@ describe('Producer service', () => {
                 requestTimeout: 10000,
             })
         })
+
         it('should get expected kafka producer configuration', () => {
             expect(producerService.kafkaProducerOptions()).to.deep.include({
                 requireAcks: 1,
@@ -139,7 +140,7 @@ describe('Consumer service', () => {
             }) as any
         })
 
-        it('should get expected kafka producer configuration', () => {
+        it('should get expected kafka consumer group configuration', () => {
             expect(consumerService.kafkaConsumerGroupOptions()).to.deep.include({
                 kafkaHost: '127.0.0.1:1234',
                 sslOptions: {
@@ -162,6 +163,36 @@ describe('Consumer service', () => {
 
         it('should get expected monitoring topic configuration', () => {
             expect(consumerService.monitoringTopic).to.equal('test_topic')
+        })
+
+        after(() => consumerService.stop())
+    })
+
+    describe('Use as many default options as possible', () => {
+        let consumerService: any
+
+        before(() => {
+            consumerService = new ConsumerService({
+                bootstrapServers: '127.0.0.1:1234',
+            }) as any
+        })
+
+        it('should get expected kafka consumer group configuration', () => {
+            expect(consumerService.kafkaConsumerGroupOptions()).to.deep.include({
+                kafkaHost: '127.0.0.1:1234',
+                groupId: 'kafka-monitor-node-group',
+                id: 'kafka-monitor-node-member-0',
+                sessionTimeout: 15000,
+                autoCommit: true,
+                autoCommitIntervalMs: 5000,
+                fromOffset: 'latest',
+                outOfRangeOffset: 'latest',
+                commitOffsetsOnFirstJoin: true,
+            })
+        })
+
+        it('should get expected monitoring topic configuration', () => {
+            expect(consumerService.monitoringTopic).to.equal('_monitoring')
         })
 
         after(() => consumerService.stop())
