@@ -17,12 +17,19 @@ class ProducerMock {
     on() {}
     close() {}
 }
+class ConsumerGroupMock {
+    constructor() {}
+    on() {}
+    close() {}
+}
 mockery.registerMock('kafka-node', {
     KafkaClient: KafkaClientMock,
     Producer: ProducerMock,
+    ConsumerGroup: ConsumerGroupMock,
 })
 
 import { ProducerService } from '../lib/producer-service'
+import { ConsumerService } from '../lib/consumer-service'
 
 describe('Producer service', () => {
     describe('Configure all options', () => {
@@ -110,5 +117,53 @@ describe('Producer service', () => {
         })
 
         after(() => producerService.stop())
+    })
+})
+
+describe('Consumer service', () => {
+    describe('Configure all options', () => {
+        let consumerService: any
+
+        before(() => {
+            consumerService = new ConsumerService({
+                bootstrapServers: '127.0.0.1:1234',
+                topic: 'test_topic',
+                id: 'test',
+                sslOptions: {
+                    ca: 'ca',
+                    cert: 'cert',
+                    key: 'key',
+                    rejectUnauthorized: true,
+                    requestCert: true,
+                },
+            }) as any
+        })
+
+        it('should get expected kafka producer configuration', () => {
+            expect(consumerService.kafkaConsumerGroupOptions()).to.deep.include({
+                kafkaHost: '127.0.0.1:1234',
+                sslOptions: {
+                    ca: 'ca',
+                    cert: 'cert',
+                    key: 'key',
+                    rejectUnauthorized: true,
+                    requestCert: true,
+                },
+                groupId: 'kafka-monitor-node-group',
+                id: 'kafka-monitor-node-member-0',
+                sessionTimeout: 15000,
+                autoCommit: true,
+                autoCommitIntervalMs: 5000,
+                fromOffset: 'latest',
+                outOfRangeOffset: 'latest',
+                commitOffsetsOnFirstJoin: true,
+            })
+        })
+
+        it('should get expected monitoring topic configuration', () => {
+            expect(consumerService.monitoringTopic).to.equal('test_topic')
+        })
+
+        after(() => consumerService.stop())
     })
 })
