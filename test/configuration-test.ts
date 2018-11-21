@@ -8,19 +8,19 @@ mockery.enable({
 })
 
 class KafkaClientMock {
-    constructor() {}
-    on() {}
-    close() {}
+    constructor() { }
+    on() { }
+    close() { }
 }
 class ProducerMock {
-    constructor() {}
-    on() {}
-    close() {}
+    constructor() { }
+    on() { }
+    close() { }
 }
 class ConsumerGroupMock {
-    constructor() {}
-    on() {}
-    close() {}
+    constructor() { }
+    on() { }
+    close() { }
 }
 mockery.registerMock('kafka-node', {
     KafkaClient: KafkaClientMock,
@@ -40,7 +40,7 @@ describe('Producer service', () => {
                 bootstrapServers: '127.0.0.1:1234',
                 topic: 'test_topic',
                 id: 'test',
-                intervalMs: 1000,
+                recordDelayMs: 1000,
                 sslOptions: {
                     ca: 'ca',
                     cert: 'cert',

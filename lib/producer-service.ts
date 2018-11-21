@@ -11,13 +11,13 @@ export class ProducerService {
     private isProducerReady$ = new Subject<void>()
     private destroy$ = new Subject<void>()
     private monitoringTopic: string
-    private intervalMs: number
+    private recordDelayMs: number
 
     constructor(private options: ProducerServiceOptions) {
         this.client = new KafkaClient(this.kafkaClientOptions())
         this.producer = new Producer(this.client, this.kafkaProducerOptions())
         this.monitoringTopic = this.options.topic || '_monitoring'
-        this.intervalMs = this.options.intervalMs || 100
+        this.recordDelayMs = this.options.recordDelayMs || 100
         this.listenEvents()
     }
 
@@ -130,10 +130,10 @@ export class ProducerService {
 
     private startInterval() {
         logger.info('Starting ProducerService interval')
-        return interval(this.intervalMs)
+        return interval(this.recordDelayMs)
             .pipe(
                 map(() => {
-                    logger.info(`New tick (every ${this.intervalMs} ms)`)
+                    logger.info(`New tick (every ${this.recordDelayMs} ms)`)
                     this.sendToKafka().catch((error: any) => logger.error('Failed to send to Kafka: ', error))
                 }),
                 takeUntil(this.destroy$)

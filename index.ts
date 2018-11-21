@@ -8,7 +8,7 @@ async function main() {
     }
     const producerService = new ProducerService({
         ...basicConfig,
-        intervalMs: 1000
+        recordDelayMs: 1000
     })
     await producerService.start()
 

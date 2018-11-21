@@ -14,7 +14,7 @@ export interface BaseServiceOptions {
 }
 
 export interface ProducerServiceOptions extends BaseServiceOptions {
-    intervalMs?: number
+    recordDelayMs?: number
 }
 
 export interface ConsumerServiceOptions extends BaseServiceOptions {
