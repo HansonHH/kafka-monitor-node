@@ -3,7 +3,7 @@ import { Subject, interval, bindCallback, bindNodeCallback, empty } from 'rxjs'
 import { map, takeUntil } from 'rxjs/operators'
 import { logger } from '../utils/logger'
 import { ProducerServiceOptions } from './types'
-import { fillUpRecord } from './utils'
+import { fillUpRecord } from '../utils/util'
 
 export class ProducerService {
     private client: KafkaClient

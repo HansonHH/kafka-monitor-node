@@ -1,6 +1,6 @@
 import 'mocha'
 import { expect } from 'chai'
-import { fillUpRecord } from '../lib/utils'
+import { fillUpRecord } from '../utils/util'
 
 describe('utils test', () => {
     describe('fillUpRecord function', () => {

@@ -1,4 +1,4 @@
-import { Record } from './types'
+import { Record } from '../lib/types'
 
 export function fillUpRecord(record: Record, recordSizeByte: number) {
     const recordString = JSON.stringify(record)
