@@ -15,6 +15,7 @@ export interface BaseServiceOptions {
 
 export interface ProducerServiceOptions extends BaseServiceOptions {
     recordDelayMs?: number
+    recordSizeByte?: number
 }
 
 export interface ConsumerServiceOptions extends BaseServiceOptions {
@@ -22,4 +23,9 @@ export interface ConsumerServiceOptions extends BaseServiceOptions {
 
 export interface ExtendedConsumerGroupOptions extends ConsumerGroupOptions {
     commitOffsetsOnFirstJoin?: boolean
+}
+
+export interface Record {
+    timestamp: number,
+    dummy: string
 }

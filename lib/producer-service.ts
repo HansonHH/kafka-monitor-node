@@ -2,7 +2,7 @@ import { Producer, KafkaClient } from 'kafka-node'
 import { Subject, interval, bindCallback, bindNodeCallback, empty } from 'rxjs'
 import { map, takeUntil } from 'rxjs/operators'
 import { logger } from '../utils/logger'
-import { ProducerServiceOptions } from './types'
+import { ProducerServiceOptions, Record } from './types'
 
 export class ProducerService {
     private client: KafkaClient
@@ -12,12 +12,14 @@ export class ProducerService {
     private destroy$ = new Subject<void>()
     private monitoringTopic: string
     private recordDelayMs: number
+    private recordSizeByte: number
 
     constructor(private options: ProducerServiceOptions) {
         this.client = new KafkaClient(this.kafkaClientOptions())
         this.producer = new Producer(this.client, this.kafkaProducerOptions())
         this.monitoringTopic = this.options.topic || '_monitoring'
         this.recordDelayMs = this.options.recordDelayMs || 100
+        this.recordSizeByte = this.options.recordSizeByte || 100
         this.listenEvents()
     }
 
@@ -123,9 +125,24 @@ export class ProducerService {
         return bindNodeCallback(this.producer.send).call(this.producer, [
             {
                 topic: this.monitoringTopic,
-                messages: JSON.stringify({ timestamp: Date.now() }),
+                messages: this.createRecord(this.recordSizeByte),
             },
         ]).toPromise()
+    }
+
+    private createRecord(recordSizeByte: number) {
+        const originalRecord = { timestamp: Date.now(), dummy: '' }
+        return this.fillUpRecord(originalRecord, recordSizeByte)
+    }
+
+    private fillUpRecord(record: Record, recordSizeByte: number) {
+        const recordString = JSON.stringify(record)
+        const originalRecordByteLength = Buffer.byteLength(recordString)
+        if (recordSizeByte > originalRecordByteLength) {
+            const seed = '0'
+            record.dummy = seed.repeat(recordSizeByte - originalRecordByteLength)
+        }
+        return JSON.stringify(record)
     }
 
     private startInterval() {

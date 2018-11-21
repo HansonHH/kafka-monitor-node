@@ -41,6 +41,7 @@ describe('Producer service', () => {
                 topic: 'test_topic',
                 id: 'test',
                 recordDelayMs: 1000,
+                recordSizeByte: 1000,
                 sslOptions: {
                     ca: 'ca',
                     cert: 'cert',
@@ -78,8 +79,12 @@ describe('Producer service', () => {
             expect(producerService.monitoringTopic).to.equal('test_topic')
         })
 
-        it('should get expected interval configuration', () => {
-            expect(producerService.intervalMs).to.equal(1000)
+        it('should get expected record delay ms configuration', () => {
+            expect(producerService.recordDelayMs).to.equal(1000)
+        })
+
+        it('should get expected record size byte configuration', () => {
+            expect(producerService.recordSizeByte).to.equal(1000)
         })
 
         after(() => producerService.stop())
@@ -113,8 +118,12 @@ describe('Producer service', () => {
             expect(producerService.monitoringTopic).to.equal('_monitoring')
         })
 
-        it('should get expected interval configuration', () => {
-            expect(producerService.intervalMs).to.equal(100)
+        it('should get expected record delay ms configuration', () => {
+            expect(producerService.recordDelayMs).to.equal(100)
+        })
+
+        it('should get expected record size byte configuration', () => {
+            expect(producerService.recordSizeByte).to.equal(100)
         })
 
         after(() => producerService.stop())
