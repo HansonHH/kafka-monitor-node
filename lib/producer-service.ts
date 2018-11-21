@@ -126,7 +126,7 @@ export class ProducerService {
         return bindNodeCallback(this.producer.send).call(this.producer, [
             {
                 topic: this.monitoringTopic,
-                messages: this.createRecord(this.recordSizeByte),
+                messages: JSON.stringify(this.createRecord(this.recordSizeByte))
             },
         ]).toPromise()
     }

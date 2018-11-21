@@ -7,5 +7,5 @@ export function fillUpRecord(record: Record, recordSizeByte: number) {
         const seed = '0'
         record.dummy = seed.repeat(recordSizeByte - originalRecordByteLength)
     }
-    return JSON.stringify(record)
+    return record
 }
