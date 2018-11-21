@@ -2,7 +2,8 @@ import { Producer, KafkaClient } from 'kafka-node'
 import { Subject, interval, bindCallback, bindNodeCallback, empty } from 'rxjs'
 import { map, takeUntil } from 'rxjs/operators'
 import { logger } from '../utils/logger'
-import { ProducerServiceOptions, Record } from './types'
+import { ProducerServiceOptions } from './types'
+import { fillUpRecord } from './utils'
 
 export class ProducerService {
     private client: KafkaClient
@@ -132,17 +133,7 @@ export class ProducerService {
 
     private createRecord(recordSizeByte: number) {
         const originalRecord = { timestamp: Date.now(), dummy: '' }
-        return this.fillUpRecord(originalRecord, recordSizeByte)
-    }
-
-    private fillUpRecord(record: Record, recordSizeByte: number) {
-        const recordString = JSON.stringify(record)
-        const originalRecordByteLength = Buffer.byteLength(recordString)
-        if (recordSizeByte > originalRecordByteLength) {
-            const seed = '0'
-            record.dummy = seed.repeat(recordSizeByte - originalRecordByteLength)
-        }
-        return JSON.stringify(record)
+        return fillUpRecord(originalRecord, recordSizeByte)
     }
 
     private startInterval() {
