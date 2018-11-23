@@ -78,17 +78,33 @@ export class ProducerService {
     }
 
     private listenEvents() {
-        this.client.on('ready', () => {
-            logger.info('Kafka client is ready')
-            this.isClientReady$.complete()
-        })
-        this.client.on('brokersChanged', () => logger.info('Kafka client brokersChanged'))
-        this.client.on('error', (error) => logger.error('Kafka client got error: ', error))
-        this.producer.on('error', (error) => logger.error('Producer got error: ', error))
-        this.producer.on('ready', () => {
-            logger.info('Producer is ready')
-            this.isProducerReady$.complete()
-        })
+        this.client.on('error', (error) => this.onClientError(error))
+        this.client.on('ready', () => this.onClientReady())
+        this.client.on('brokersChanged', () => this.onClientBrokersChanged())
+        this.producer.on('error', (error) => this.onProducerError(error))
+        this.producer.on('ready', () => this.onProducerReady())
+    }
+
+    private onClientReady() {
+        logger.info('Kafka client is ready')
+        this.isClientReady$.complete()
+    }
+
+    private onClientBrokersChanged() {
+        logger.info('Kafka client brokersChanged')
+    }
+
+    private onClientError(error: Error) {
+        logger.error('Kafka client got error: ', error)
+    }
+
+    private onProducerError(error: Error) {
+        logger.error('Producer got error: ', error)
+    }
+
+    private onProducerReady() {
+        logger.info('Producer is ready')
+        this.isProducerReady$.complete()
     }
 
     private async getClusterScale() {

@@ -42,14 +42,24 @@ export class ConsumerService {
     }
 
     private listenEvents() {
-        this.consumerGroup.on('error', (error) => logger.error('Consumer group got error: ', error))
-        this.consumerGroup.on('rebalancing', () => logger.error('Consumer group is rebalancing'))
-        this.consumerGroup.on('rebalanced', () => {
-            logger.info('Consumer group is ready')
-            this.startTime = Date.now()
-            this.isConsumerGroupReady$.complete()
-        })
+        this.consumerGroup.on('error', (error) => this.onError(error))
+        this.consumerGroup.on('rebalancing', () => this.onRebalancing())
+        this.consumerGroup.on('rebalanced', () => this.onRebalanced())
         this.consumerGroup.on('message', (message) => this.messageProcessing(message))
+    }
+
+    private onError(error: Error) {
+        logger.error('Consumer group got error: ', error)
+    }
+
+    private onRebalancing() {
+        logger.info('Consumer group is rebalancing')
+    }
+
+    private onRebalanced() {
+        logger.info('Consumer group is ready')
+        this.startTime = Date.now()
+        this.isConsumerGroupReady$.complete()
     }
 
     private messageProcessing(message: Message) {
