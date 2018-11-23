@@ -29,3 +29,21 @@ export interface Record {
     timestamp: number,
     dummy: string
 }
+
+export interface BrokerInfo {
+    [nodeId: string]: {
+        nodeId: number,
+        host: string,
+        port: string
+    }
+}
+
+export interface TopicPartitionAssignment {
+    [partition: string]: {
+        topic: string
+        partition: number
+        leader: number
+        replicas: string[]
+        isr: string[]
+    }
+}

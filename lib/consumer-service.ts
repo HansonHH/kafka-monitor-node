@@ -1,15 +1,17 @@
 import { ConsumerGroup, Message } from 'kafka-node'
 import { logger } from '../utils/logger'
-import { ConsumerServiceOptions, ExtendedConsumerGroupOptions } from './types'
-import { Subject } from 'rxjs'
+import { ConsumerServiceOptions, ExtendedConsumerGroupOptions, BrokerInfo, TopicPartitionAssignment } from './types'
+import { Subject, bindNodeCallback } from 'rxjs'
 
 export class ConsumerService {
 
     private consumerGroup: ConsumerGroup
     private isConsumerGroupReady$ = new Subject<void>()
     private monitoringTopic: string
-    private metrics = new Map<number, number>()
+    private metrics = new Map<number, { partition: number, host: string, port: string, latency: number }>()
     private startTime = Date.now()
+    private brokerInfo: BrokerInfo = {}
+    private topicPartitionAssignment: TopicPartitionAssignment = {}
 
     constructor(private options: ConsumerServiceOptions) {
         this.monitoringTopic = this.options.topic || '_monitoring'
@@ -56,10 +58,33 @@ export class ConsumerService {
         logger.info('Consumer group is rebalancing')
     }
 
-    private onRebalanced() {
+    private async onRebalanced() {
         logger.info('Consumer group is ready')
         this.startTime = Date.now()
         this.isConsumerGroupReady$.complete()
+
+        const metadata = await this.loadMetadataForTopics([this.monitoringTopic])
+        this.brokerInfo = this.parseBrokerInfo(metadata)
+        logger.info('Got broker info', JSON.stringify(this.brokerInfo, null, 2))
+
+        this.topicPartitionAssignment = this.parseTopicPartitionAssignment(metadata)
+        logger.info('Got topic partition assignment', JSON.stringify(this.topicPartitionAssignment, null, 2))
+    }
+
+    private loadMetadataForTopics(topics?: string[]) {
+        logger.info('Loading metadata for topics')
+        return bindNodeCallback((this.consumerGroup.client as any).loadMetadataForTopics)
+            .call(this.consumerGroup.client, topics).toPromise()
+    }
+
+    private parseBrokerInfo(metadata: any): BrokerInfo {
+        logger.info('Parsing broker info')
+        return metadata[0]
+    }
+
+    private parseTopicPartitionAssignment(metadata: any): TopicPartitionAssignment {
+        logger.info('Parsing monitoring topic partition assignment')
+        return metadata[1].metadata[this.monitoringTopic]
     }
 
     private messageProcessing(message: Message) {
@@ -68,16 +93,25 @@ export class ConsumerService {
         if (messageValue.timestamp < this.startTime) {
             return
         }
+
         const latency = Date.now() - messageValue.timestamp
         if (message.partition !== undefined && latency >= 0) {
-            this.metrics.set(message.partition, latency)
+            const leaderBroker = this.topicPartitionAssignment[message.partition].leader
+            const brokerInfo = this.brokerInfo[leaderBroker]
+
+            this.metrics.set(brokerInfo.nodeId, {
+                partition: message.partition,
+                host: brokerInfo.host,
+                port: brokerInfo.port,
+                latency
+            })
             this.printOut()
         }
     }
 
     printOut() {
         this.metrics.forEach((value, key) => {
-            logger.info(`Partition: ${key}, latency: ${value} ms`)
+            logger.info(`leader: ${key} partition: ${value.partition} host: ${value.host} latency: ${value.latency}ms`)
         })
     }
 
