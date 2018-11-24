@@ -19,6 +19,7 @@ export interface ProducerServiceOptions extends BaseServiceOptions {
 }
 
 export interface ConsumerServiceOptions extends BaseServiceOptions {
+    groupId?: string
 }
 
 export interface ExtendedConsumerGroupOptions extends ConsumerGroupOptions {

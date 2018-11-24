@@ -138,7 +138,8 @@ describe('Consumer service', () => {
             consumerService = new ConsumerService({
                 bootstrapServers: '127.0.0.1:1234',
                 topic: 'test_topic',
-                id: 'test',
+                groupId: 'kafka-monitor-node-group',
+                id: 'kafka-monitor-node-member-0',
                 sslOptions: {
                     ca: 'ca',
                     cert: 'cert',

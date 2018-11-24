@@ -32,8 +32,8 @@ export class ConsumerService {
         return {
             kafkaHost: this.options.bootstrapServers,
             sslOptions: this.options.sslOptions,
-            groupId: 'kafka-monitor-node-group',
-            id: 'kafka-monitor-node-member-0',
+            groupId: this.options.groupId || 'kafka-monitor-node-group',
+            id: this.options.id || 'kafka-monitor-node-member-0',
             sessionTimeout: 15000,
             autoCommit: true,
             autoCommitIntervalMs: 5000,
@@ -114,5 +114,4 @@ export class ConsumerService {
             logger.info(`leader: ${key} partition: ${value.partition} host: ${value.host} latency: ${value.latency}ms`)
         })
     }
-
 }
